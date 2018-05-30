@@ -250,13 +250,22 @@ async function fetchData({
     }
     // Gravity Forms
     if (type == `wordpress__gf_forms`) {
-      for (let key in routeResponse) {
-        for (let formKey in routeResponse[key]) {
-          let form = routeResponse[key][formKey]
-          if (form && form.id && form.title) {
-            // Ex. /gf/v2/forms/12
-            let formUrl = `${url}/${form.id}`
-            let fetchedData = await fetchData({
+      let formIds = Object.keys(routeResponse[0])
+      formIds.pop()
+      console.log("formIds", formIds)
+      let totalForms = formIds.length
+
+      if (totalForms >= 1) {
+        if (_verbose) {
+          console.log(`Forms to be requested :`, totalForms)
+        }
+
+        async function getFormData(formId, url) {
+          const pArray = formIds.map(async formId => {
+            let formUrl = `${url}/${formId}`
+            console.log("🔗", formUrl)
+
+            let response = await fetchData({
               route: { url: formUrl, type: `${type}` },
               _verbose,
               _perPage,
@@ -264,10 +273,53 @@ async function fetchData({
               _auth,
               _accessToken,
             })
-            entities = entities.concat(fetchedData)
-          }
+
+            console.log(response)
+            return response.json()
+          })
+          return await Promise.all(pArray)
         }
+
+        const forms = formIds.map(formId => {
+          console.log("get form data", formId)
+          getFormData(formId, url)
+        })
+
+        console.log("form options", forms)
+
+        // const forms = await requestInQueue(formOptions, {
+        //   concurrent: _concurrentRequests,
+        // })
+
+        const pageData = forms.map(page => {
+          console.log("page", page, page.data)
+          return page.data
+        })
+
+        pageData.forEach(list => {
+          console.log("list", list)
+          result = result.concat(list)
+        })
       }
+
+      // for (let key in routeResponse) {
+      //   for (let formKey in routeResponse[key]) {
+      //     let form = routeResponse[key][formKey]
+      //     if (form && form.id && form.title) {
+      //       // Ex. /gf/v2/forms/12
+      //
+      //       let fetchedData = await fetchData({
+      //         route: { url: formUrl, type: `${type}` },
+      //         _verbose,
+      //         _perPage,
+      //         _hostingWPCOM,
+      //         _auth,
+      //         _accessToken,
+      //       })
+      //       entities = entities.concat(fetchedData)
+      //     }
+      //   }
+      // }
       if (_hostingWPCOM) {
         // TODO : Need to test that out with Gravity Forms on Wordpress.com hosted site. Need a premium account on wp.com to install extensions. See also ACF options page.
         if (_verbose)
