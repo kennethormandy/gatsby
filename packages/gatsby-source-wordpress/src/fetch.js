@@ -265,13 +265,21 @@ async function fetchData({
               _accessToken,
             })
 
-            // Fixes mix string and array types when
-            // querying choices, enableCalculation
+            // Manually fixes mix types when
+            // querying choices, enableCalculation, content
             fetchedData.map(property => {
               if (property.fields) {
                 property.fields.map(field => {
-                  field.choices = field.choices || null
+                  field.choices = field.choices || [
+                    {
+                      text: "",
+                      value: "",
+                      isSelected: "",
+                      price: "",
+                    },
+                  ]
                   field.enableCalculation = field.enableCalculation || null
+                  field.content = field.content || ""
                 })
               }
             })
