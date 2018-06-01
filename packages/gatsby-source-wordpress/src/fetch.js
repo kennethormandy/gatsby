@@ -274,7 +274,7 @@ async function fetchData({
                     {
                       text: "",
                       value: "",
-                      isSelected: "",
+                      isSelected: false,
                       price: "",
                     },
                   ]
