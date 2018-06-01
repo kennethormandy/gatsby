@@ -264,6 +264,18 @@ async function fetchData({
               _auth,
               _accessToken,
             })
+
+            // Fixes mix string and array types when
+            // querying choices, enableCalculation
+            fetchedData.map(property => {
+              if (property.fields) {
+                property.fields.map(field => {
+                  field.choices = field.choices || null
+                  field.enableCalculation = field.enableCalculation || null
+                })
+              }
+            })
+
             entities = entities.concat(fetchedData)
           }
         }
